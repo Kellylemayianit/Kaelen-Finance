@@ -1,0 +1,21 @@
+{
+ "id": "ledger",
+ "name": "Ledger",
+ "scheme": "light",
+ "tokens": {
+  "bg": "#F3F1EA",
+  "sb": "#16211B",
+  "card": "#FBFAF6",
+  "c2": "#ECEFE8",
+  "ink": "#1B1F1C",
+  "mu": "#5E645E",
+  "ln": "#DAD6C8",
+  "ac": "#1E5B45",
+  "acf": "#FFFFFF",
+  "hot": "#A8461A",
+  "up": "#1E5B45",
+  "dn": "#A8461A",
+  "sbi": "#C9D6CE",
+  "sa": "#7FD1A8"
+ }
+}

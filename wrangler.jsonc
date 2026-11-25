@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "research-desk",
+  "main": "src/index.js",
+  "compatibility_date": "2025-11-01",
+  "observability": { "enabled": true },
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "research-desk-db",
+      "database_id": "39c67d72-7a31-4307-94df-41239f4d78b7",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "triggers": { "crons": ["30 21 * * 5", "0 6 * * 6"] }
+}

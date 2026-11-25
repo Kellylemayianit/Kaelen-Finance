@@ -1,0 +1,19 @@
+import {Sidebar} from './components/Sidebar.js';import {Topbar} from './components/Topbar.js';import {BottomNav} from './components/BottomNav.js';import {mountPalette} from './components/SearchPalette.js';import {mountDialog} from './components/CheckinDialog.js';import {mountThesisDialog} from './components/ThesisDialog.js';import {mountKeyDialog} from './components/KeyDialog.js';import {Skeleton} from './components/ui.js';
+import {Home} from './views/Home.js';import {Dollar} from './views/Dollar.js';import {Bets} from './views/Bets.js';import {Flow} from './views/Flow.js';import {Networks} from './views/Networks.js';import {Yields} from './views/Yields.js';import {Thesis} from './views/Thesis.js';import {Checkins} from './views/Checkins.js';import {Compare} from './views/Compare.js';import {Terminal,Vault} from './views/Later.js';
+import {SPRITE} from './core/dom.js';import {state,set,subscribe} from './core/store.js';import {onRoute} from './core/router.js';import {init,load} from './core/themes.js';import {stagger,countUp,progress,reduced,wait} from './core/motion.js';
+const V={'/home':Home,'/dollar':Dollar,'/bets':Bets,'/flow':Flow,'/networks':Networks,'/yields':Yields,'/thesis':Thesis,'/checkins':Checkins,'/compare':Compare,'/terminal':Terminal,'/vault':Vault};
+const $=id=>document.getElementById(id);let route,view,data,ready=false,tok=0,key='';
+function chrome(){const k=document.activeElement?.dataset?.fk;$('sbh').replaceChildren(Sidebar(route));$('tbh').replaceChildren(Topbar(view));$('bnh').replaceChildren(BottomNav(route));$('shell').classList.toggle('open',state.drawer);if(k)document.querySelector(`[data-fk="${k}"]`)?.focus()}
+function paint(anim){const k=document.activeElement?.dataset?.fk,sy=scrollY,el=$('view');let node;try{node=view.render(data,route)}catch(e){console.error(e);node=document.createElement('div');node.className='panel empty';node.textContent='Something went wrong showing this page.'}
+el.replaceChildren(...node.children);el.classList.toggle('enter',anim);if(anim){stagger(el);scrollTo(0,0)}else scrollTo(0,sy);countUp(el);if(!anim&&k)document.querySelector(`[data-fk="${k}"]`)?.focus()}
+async function navigate(r,soft=false){route=r;view=V[r.path]||Home;const my=++tok;if(!soft){ready=false;if(state.drawer)set({drawer:false});progress.start();document.title=view.title+' · Research desk';chrome();$('view').classList.remove('enter');$('view').replaceChildren(...Skeleton().children)}
+let d;try{[d]=await Promise.all([view.load(r),soft?0:wait(view.delay??450)])}catch(e){console.error(e);if(my===tok){$('view').replaceChildren();const n=document.createElement('div');n.className='panel empty';n.textContent='Could not load this page. Try again.';$('view').append(n);progress.done()}return}
+if(my!==tok)return;data=d;ready=true;chrome();paint(!soft);if(!soft)progress.done()}
+async function sync(){const k=state.theme+JSON.stringify(state.custom);if(k===key)return;key=k;try{await load(state.theme,state.custom)}catch{set({theme:'harbor'})}}
+(async()=>{await init();document.body.insertAdjacentHTML('afterbegin',SPRITE);await sync();mountPalette();mountDialog();mountThesisDialog();mountKeyDialog();
+const sp=$('splash');if(sessionStorage.getItem('rd:s')||reduced())sp.remove();else{sessionStorage.setItem('rd:s','1');setTimeout(()=>sp.classList.add('out'),1100);setTimeout(()=>sp.remove(),1700)}
+subscribe(async()=>{await sync();if(ready){chrome();paint(false)}});
+addEventListener('rd:refresh',()=>route&&navigate(route,true));addEventListener('rd:reload',()=>route&&navigate(route));
+$('scrim').addEventListener('click',()=>set({drawer:false}));addEventListener('keydown',e=>{if(e.key==='Escape'&&state.drawer)set({drawer:false})});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(state.theme==='auto'){key='';sync()}});matchMedia('(max-width:720px)').addEventListener('change',()=>ready&&paint(false));
+onRoute(r=>navigate(r))})();

@@ -1,0 +1,2 @@
+// Writes and private reads need the x-rd-key header to match the WRITE_KEY secret. Cloudflare Access can later lock the whole site.
+export function allowed(req,env){const s=env.WRITE_KEY||'',k=req.headers.get('x-rd-key')||'';if(!s||k.length!==s.length)return false;let d=0;for(let i=0;i<k.length;i++)d|=k.charCodeAt(i)^s.charCodeAt(i);return d===0}

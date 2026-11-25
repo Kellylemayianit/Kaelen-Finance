@@ -1,0 +1,4 @@
+import {h} from '../core/dom.js';import {set} from '../core/store.js';import * as repo from '../core/repo.js';import {Panel} from '../components/ui.js';
+export const Checkins={eyebrow:'My work',title:'Check-ins',delay:350,load:()=>repo.checkins(),render(all){
+return h('div',{class:'vw',style:'padding:0'},h('div',{class:'rise',style:'display:flex;justify-content:space-between;align-items:center'},h('p',{class:'mu'},`${all.length} check-in${all.length===1?'':'s'}, newest first`),h('button',{class:'cta',onclick:()=>set({dlg:true})},'Add check-in')),
+Panel('Weekly log',null,all.length?h('div',{},...all.map(c=>h('div',{class:'kv',style:'padding:14px 18px;align-items:flex-start'},h('div',{},h('b',{},c.label),h('div',{class:'mu'},c.status)),h('p',{style:'max-width:560px;text-align:right'},c.note)))):h('div',{class:'empty'},'No check-ins yet. Add your first one.'),'z'))}}

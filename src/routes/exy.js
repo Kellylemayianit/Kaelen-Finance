@@ -1,0 +1,6 @@
+import {json,err,body} from '../http.js';
+const D=/^\d{4}-\d{2}-\d{2}$/,N=v=>Number.isInteger(v)&&v>=0&&v<=1e9;
+export async function list(req,env){const{results}=await env.DB.prepare('SELECT report_date,long_pos,short_pos FROM exy_cot ORDER BY report_date DESC LIMIT 200').all();return json({items:results})}
+export async function upsert(req,env){const b=await body(req);if(!b||!D.test(b.report_date||'')||!N(b.long_pos)||!N(b.short_pos))return err(400,'Send report_date (YYYY-MM-DD) and whole-number long_pos and short_pos.');
+const row=await env.DB.prepare('INSERT INTO exy_cot(report_date,long_pos,short_pos) VALUES(?,?,?) ON CONFLICT(report_date) DO UPDATE SET long_pos=excluded.long_pos,short_pos=excluded.short_pos,updated_at=strftime(\'%Y-%m-%dT%H:%M:%SZ\',\'now\') RETURNING report_date,long_pos,short_pos').bind(b.report_date,b.long_pos,b.short_pos).first();return json(row,201)}
+export async function remove(req,env,date){if(!D.test(date))return err(400,'Bad date.');await env.DB.prepare('DELETE FROM exy_cot WHERE report_date=?').bind(date).run();return json({ok:true})}

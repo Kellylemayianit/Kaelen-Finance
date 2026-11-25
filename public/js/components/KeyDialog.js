@@ -1,0 +1,7 @@
+import {h} from '../core/dom.js';import {state,set,subscribe} from '../core/store.js';import {setKey} from '../core/repo.js';
+export function mountKeyDialog(){
+const k=h('input',{id:'kk',type:'password',autocomplete:'current-password',placeholder:'Your write key'}),err=h('div',{class:'err2',role:'alert'});
+const save=()=>{if(k.value.trim().length<4){err.textContent='Enter the key you set as WRITE_KEY.';return}setKey(k.value.trim());k.value='';set({keyDlg:false});dispatchEvent(new Event('rd:reload'))};
+const d=h('dialog',{class:'dlg','aria-labelledby':'kt'},h('h2',{id:'kt'},'Unlock your data'),h('p',{class:'mu',style:'margin-bottom:12px'},'Your check-ins, EXY rows and theses are private. Enter the WRITE_KEY you set in GitHub. It is stored only in this browser.'),h('div',{class:'field'},h('label',{for:'kk'},'Write key'),k,err),h('div',{class:'acts'},h('button',{class:'cta l',onclick:()=>set({keyDlg:false})},'Not now'),h('button',{class:'cta',onclick:save},'Unlock')));
+k.addEventListener('keydown',e=>{if(e.key==='Enter')save()});d.addEventListener('close',()=>{if(state.keyDlg)set({keyDlg:false})});document.body.append(d);
+subscribe(s=>{if(s.keyDlg&&!d.open){err.textContent='';d.showModal();k.focus()}else if(!s.keyDlg&&d.open)d.close()})}

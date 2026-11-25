@@ -1,0 +1,8 @@
+import {h} from '../core/dom.js';import {state,set,subscribe} from '../core/store.js';import {addCheckin,mode} from '../core/repo.js';import {toast} from './Toast.js';
+export function mountDialog(){
+const sel=h('select',{id:'ds'},...['Unchanged','Stronger','Weaker','Invalidated'].map(x=>h('option',{},x))),ta=h('textarea',{id:'dn',rows:4,placeholder:'What changed this week? Data, positioning, levels.'}),err=h('div',{class:'err2',role:'alert'}),btn=h('button',{class:'cta'},'Save check-in');
+const d=h('dialog',{class:'dlg','aria-labelledby':'dt'},h('h2',{id:'dt'},'Add a check-in'),h('div',{class:'field'},h('label',{for:'ds'},'Is your view still right?'),sel),h('div',{class:'field'},h('label',{for:'dn'},'Notes'),ta,err),h('div',{class:'acts'},h('button',{class:'cta l',onclick:()=>set({dlg:false})},'Cancel'),btn));
+btn.addEventListener('click',async()=>{if(ta.value.trim().length<3){err.textContent='Write a few words about what changed.';ta.focus();return}btn.disabled=true;
+try{const r=await addCheckin({status:sel.value,note:ta.value.trim()});if(!r){err.textContent='Enter your key to save.';return}ta.value='';err.textContent='';set({dlg:false});toast(mode.live?'Check-in saved':'Saved in this browser only');dispatchEvent(new Event('rd:refresh'))}catch(e){err.textContent=e.message}finally{btn.disabled=false}});
+d.addEventListener('close',()=>{if(state.dlg)set({dlg:false})});d.addEventListener('click',e=>{if(e.target===d)set({dlg:false})});document.body.append(d);
+subscribe(s=>{if(s.dlg&&!d.open){err.textContent='';d.showModal();ta.focus()}else if(!s.dlg&&d.open)d.close()})}
