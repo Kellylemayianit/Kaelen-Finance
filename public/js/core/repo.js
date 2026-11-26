@@ -22,3 +22,4 @@ export const cot=async()=>{const d=await read('/api/cot?weeks=13',sampleCot);ret
 export async function syncCot(){return call('/api/cot/sync',{method:'POST'})}
 export const flow=async()=>{const d=await read('/api/flow',()=>({nets:NETS,stable:{now:3.5,d7:2.1,series:STABLE},sample:true}));return d};
 export const yields=async()=>{const d=await read('/api/yields',()=>POOLS);return Array.isArray(d)?d:d.items};
+export const status=async()=>read('/api/status',()=>({offline:true}));

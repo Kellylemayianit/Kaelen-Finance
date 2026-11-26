@@ -1,7 +1,8 @@
 import {json,err} from './http.js';import {allowed} from './auth.js';import {syncCot} from './cftc.js';
-import * as checkins from './routes/checkins.js';import * as exy from './routes/exy.js';import * as thesis from './routes/thesis.js';import * as cot from './routes/cot.js';import * as market from './routes/market.js';
+import * as checkins from './routes/checkins.js';import * as exy from './routes/exy.js';import * as thesis from './routes/thesis.js';import * as cot from './routes/cot.js';import * as market from './routes/market.js';import {status} from './routes/status.js';
 // [method, path pattern, handler, needs key]
 const ROUTES=[
+['GET',/^\/api\/status$/,status,false],
 ['GET',/^\/api\/health$/,()=>json({ok:true,time:new Date().toISOString()}),false],
 ['GET',/^\/api\/flow$/,market.flow,false],['GET',/^\/api\/yields$/,market.yields,false],['GET',/^\/api\/cot$/,cot.get,false],
 ['POST',/^\/api\/cot\/sync$/,cot.sync,true],

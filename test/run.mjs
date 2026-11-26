@@ -6,6 +6,8 @@ const DB={prepare:s=>stmt(s),batch:async xs=>{for(const x of xs)await x.run()}};
 const env={DB,WRITE_KEY:'secret',ASSETS:{fetch:()=>new Response('asset')}};
 const call=(m,p,b,k='secret')=>worker.fetch(new Request('https://x.test'+p,{method:m,headers:{'content-type':'application/json',...(k?{'x-rd-key':k}:{})},body:b?JSON.stringify(b):undefined}),env,{});
 let fails=0;const eq=(n,a,b)=>{const ok=JSON.stringify(a)===JSON.stringify(b);console.log(ok?'ok  ':'FAIL',n,ok?'':JSON.stringify(a)+' != '+JSON.stringify(b));if(!ok)fails++};
+globalThis.fetch=async()=>{throw new Error('offline in tests')};
+const st=await(await call('GET','/api/status',0,null)).json();eq('status has 4 checks',st.checks.length,4);eq('status database ok',st.checks[0].ok,true);eq('status flow reports failure plainly',st.checks[1].ok,false);eq('status cot empty explained',/Sync positioning/.test(st.checks[3].detail),true);
 eq('health',(await call('GET','/api/health',0,null)).status,200);
 eq('assets pass through',await(await call('GET','/',0,null)).text(),'asset');
 eq('checkins locked without key',(await call('GET','/api/checkins',0,null)).status,401);
