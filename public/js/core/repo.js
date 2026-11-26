@@ -23,3 +23,7 @@ export async function syncCot(){return call('/api/cot/sync',{method:'POST'})}
 export const flow=async()=>{const d=await read('/api/flow',()=>({nets:NETS,stable:{now:3.5,d7:2.1,series:STABLE},sample:true}));return d};
 export const yields=async()=>{const d=await read('/api/yields',()=>POOLS);return Array.isArray(d)?d:d.items};
 export const status=async()=>read('/api/status',()=>({offline:true}));
+export async function search(q,signal){let r;try{r=await fetch('/api/search?q='+encodeURIComponent(q),{signal})}catch(e){if(e.name==='AbortError')throw e;return null}
+if(!(r.headers.get('content-type')||'').includes('json')||!r.ok)return null;return r.json()}
+export const chainDetail=name=>read('/api/chain?name='+encodeURIComponent(name),()=>null);
+export const protocolDetail=slug=>read('/api/protocol?slug='+encodeURIComponent(slug),()=>null);

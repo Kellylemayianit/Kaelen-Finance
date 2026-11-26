@@ -1,3 +1,3 @@
 import {h,icon} from '../core/dom.js';import {set} from '../core/store.js';import {mode} from '../core/repo.js';
 export const Topbar=(v)=>h('header',{class:'tb'},h('button',{class:'ib','aria-label':'Open menu','data-fk':'burger',onclick:()=>set({drawer:true})},icon('menu')),h('div',{class:'t'},h('small',{},v.eyebrow),h('h1',{},v.title)),h('span',{class:'mu'},mode.live?'Live data':'Sample data'),
-h('button',{class:'sf','aria-label':'Search',onclick:()=>set({searchOpen:true})},icon('s'),h('span',{},'Search assets and networks'),h('kbd',{},'Ctrl K')),h('button',{class:'cta',onclick:()=>set({dlg:true})},icon('plus'),'Add check-in'));
+h('button',{class:'sf','aria-label':'Search',onclick:()=>set({searchOpen:true})},icon('s'),h('span',{},'Search chains, protocols, assets'),h('kbd',{},'Ctrl K')),h('button',{class:'cta',onclick:()=>set({dlg:true})},icon('plus'),'Add check-in'));

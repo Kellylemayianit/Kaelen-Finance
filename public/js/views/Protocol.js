@@ -1,0 +1,8 @@
+import {h} from '../core/dom.js';import * as repo from '../core/repo.js';import {Kpi,Panel} from '../components/ui.js';import {usd,pct,cls} from '../core/format.js';
+export const Protocol={eyebrow:'Search result',title:'Protocol',delay:350,load:r=>repo.protocolDetail(r.q.get('slug')||''),render(p){
+if(!p)return h('div',{class:'vw',style:'padding:0'},h('div',{class:'panel empty rise'},h('b',{},'This page needs the live site.'),h('p',{class:'mu',style:'margin-top:8px'},'Protocol details come from DefiLlama through your Worker. Open the deployed site, or check Data status.')));
+const kv=(l,v)=>h('div',{class:'kv'},h('span',{class:'mu'},l),h('span',{},v));
+return h('div',{class:'vw',style:'padding:0'},h('div',{class:'rise',style:'display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap'},h('h2',{style:'font-size:22px'},p.name+(p.sym?' · '+p.sym:'')),h('a',{class:'cta l',href:'https://defillama.com/protocol/'+encodeURIComponent(p.slug),target:'_blank',rel:'noopener'},'Open on DefiLlama')),
+h('div',{class:'kpis'},Kpi('layers',usd(p.tvl),'Total value locked','All chains'),Kpi('flow',pct(p.d1),'1 day','Change in TVL',{c:cls(p.d1)}),Kpi('flow',pct(p.d7),'7 days','Change in TVL',{c:cls(p.d7)}),Kpi('flow',pct(p.d30),'30 days','Change in TVL',{c:cls(p.d30)})),
+h('div',{class:'two'},Panel('About',null,[kv('Category',p.category||'—'),kv('Chains',String(p.chains.length)),p.url?kv('Website',h('a',{class:'pl',href:p.url,target:'_blank',rel:'noopener'},p.url.replace(/^https?:\/\//,'').replace(/\/$/,''))):null]),
+Panel('Runs on',null,p.chains.length?h('div',{class:'fr'},...p.chains.slice(0,24).map(c=>h('a',{class:'chip o',href:'#/chain?name='+encodeURIComponent(c)},c))):h('div',{class:'mu'},'No chains listed.'))))}}

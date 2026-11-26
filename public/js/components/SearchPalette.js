@@ -1,14 +1,19 @@
-import {h} from '../core/dom.js';import {state,set,subscribe} from '../core/store.js';import {go} from '../core/router.js';import {ASSETS,NETS} from '../data/sample.js';import {NAV} from './Sidebar.js';
+import {h} from '../core/dom.js';import {state,set,subscribe} from '../core/store.js';import {go} from '../core/router.js';import * as repo from '../core/repo.js';import {ASSETS,NETS} from '../data/sample.js';import {NAV} from './Sidebar.js';import {usd,pct,cls} from '../core/format.js';
 export function mountPalette(){
-const root=h('div',{class:'pal',hidden:true,role:'dialog','aria-modal':'true','aria-label':'Search'});let i=0,items=[],was=false;
-const input=h('input',{class:'pi',role:'combobox','aria-expanded':'true','aria-controls':'pl',placeholder:'Search pages, assets and networks',autocomplete:'off'}),list=h('div',{id:'pl',role:'listbox'});
+const root=h('div',{class:'pal',hidden:true,role:'dialog','aria-modal':'true','aria-label':'Search'});let i=0,items=[],was=false,remote=[],busy=false,fail=false,ctl=null,timer=0;
+const input=h('input',{class:'pi',role:'combobox','aria-expanded':'true','aria-controls':'pl',placeholder:'Search chains, protocols, assets and pages',autocomplete:'off'}),list=h('div',{id:'pl',role:'listbox'}),note=h('div',{class:'mu',style:'padding:6px 16px',hidden:true});
 const close=()=>set({searchOpen:false});
 const pick=x=>{close();go(x.to,x.q?new URLSearchParams(x.q):null)};
-const all=()=>[...NAV.flatMap(([g,its])=>its.map(([p,,t])=>({l:t,s:'Page',to:p}))),...ASSETS.filter(a=>a.cls!=='crypto').map(a=>({l:a.sym,s:a.name,to:'/dollar',q:{sel:a.id}})),...NETS.map(n=>({l:n.name,s:'Network',to:'/networks'}))];
-const draw=()=>{const t=input.value.trim().toLowerCase();items=all().filter(x=>!t||(x.l+' '+x.s).toLowerCase().includes(t)).slice(0,9);i=Math.min(i,Math.max(items.length-1,0));
-list.replaceChildren(...(items.length?items.map((x,j)=>h('div',{role:'option',id:'o'+j,class:'op'+(j===i?' on':''),'aria-selected':j===i,onclick:()=>pick(x)},h('b',{},x.l),h('span',{class:'mu'},x.s))):[h('div',{class:'empty'},`No match for "${input.value}". Try EUR, Base, or thesis.`)]));input.setAttribute('aria-activedescendant','o'+i)};
-input.addEventListener('input',()=>{i=0;draw()});
+const local=t=>{const m=s=>!t||s.toLowerCase().includes(t);return[['Pages',NAV.flatMap(([g,its])=>its.map(([p,,n])=>({l:n,s:'Page',to:p}))).filter(x=>m(x.l))],['Assets',ASSETS.filter(a=>m(a.sym+' '+a.name)).map(a=>({l:a.sym,s:a.name,to:'/dollar',q:{sel:a.id}}))],...(fail||t.length<2?[['Networks',NETS.filter(n=>m(n.name)).map(n=>({l:n.name,s:'Network',to:'/networks'}))]]:[])]};
+const draw=()=>{const t=input.value.trim().toLowerCase();const groups=[...(remote.length?[['Chains',remote.filter(r=>r.kind==='chain').map(r=>({l:r.name,s:'Chain',tvl:r.tvl,to:'/chain',q:{name:r.name}}))],['Protocols',remote.filter(r=>r.kind==='protocol').map(r=>({l:r.name,s:r.category,tvl:r.tvl,d7:r.d7,to:'/protocol',q:{slug:r.slug}}))]]:[]),...local(t)].map(([g,a])=>[g,a.slice(0,g==='Pages'?4:6)]).filter(([,a])=>a.length);
+items=groups.flatMap(([,a])=>a);i=Math.min(i,Math.max(items.length-1,0));let k=0;const rows=[];
+for(const[g,a]of groups){rows.push(h('div',{class:'gh',role:'presentation'},g));for(const x of a){const j=k++;rows.push(h('div',{role:'option',id:'o'+j,class:'op'+(j===i?' on':''),'aria-selected':j===i,onclick:()=>pick(x)},h('b',{},x.l),h('span',{class:'mu'},x.s),x.tvl!=null?h('span',{class:'tv n'},usd(x.tvl),x.d7!=null?h('span',{class:cls(x.d7),style:'margin-left:10px'},pct(x.d7)):null):null))}}
+if(!rows.length)rows.push(h('div',{class:'empty'},busy?'Searching…':`No match for "${input.value}". Try a chain like Base, or a protocol like Aave.`));
+list.replaceChildren(...rows);input.setAttribute('aria-activedescendant','o'+i);note.textContent=busy?'Searching DefiLlama…':t.length>=2&&fail?'DefiLlama search is unavailable right now. Showing local results only.':'';note.hidden=!note.textContent};
+const run=()=>{clearTimeout(timer);ctl?.abort();const t=input.value.trim();if(t.length<2){remote=[];busy=false;fail=false;draw();return}busy=true;draw();
+timer=setTimeout(async()=>{ctl=new AbortController();try{const d=await repo.search(t,ctl.signal);remote=d?d.items:[];fail=!d}catch(e){if(e.name==='AbortError')return;remote=[];fail=true}busy=false;draw()},200)};
+input.addEventListener('input',()=>{i=0;draw();run()});
 input.addEventListener('keydown',e=>{if(e.key==='ArrowDown'){i=Math.min(i+1,items.length-1);draw();e.preventDefault()}else if(e.key==='ArrowUp'){i=Math.max(i-1,0);draw();e.preventDefault()}else if(e.key==='Enter'&&items[i])pick(items[i]);else if(e.key==='Escape')close()});
-root.append(h('div',{class:'box2'},input,list));root.addEventListener('mousedown',e=>{if(e.target===root)close()});document.body.append(root);
+root.append(h('div',{class:'box2'},input,note,list));root.addEventListener('mousedown',e=>{if(e.target===root)close()});document.body.append(root);
 addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();set({searchOpen:!state.searchOpen})}});
-subscribe(s=>{if(s.searchOpen===was)return;was=s.searchOpen;root.hidden=!was;if(was){input.value='';i=0;draw();input.focus()}})}
+subscribe(s=>{if(s.searchOpen===was)return;was=s.searchOpen;root.hidden=!was;if(was){input.value='';i=0;remote=[];fail=false;busy=false;draw();input.focus()}})}

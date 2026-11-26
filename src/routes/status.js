@@ -6,6 +6,7 @@ const checks=await Promise.all([
 t('Database (D1)','Check-ins, theses, EXY rows',async()=>{const r=await env.DB.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table'").first();return `${r.n} tables ready`}),
 t('DefiLlama: networks and stablecoins','Money flow, Networks, Compare, Home',async()=>{const d=await call(()=>market.flow());return `${d.nets.length} networks, stablecoins $${d.stable.now}B`}),
 t('DefiLlama: yields','Yields and stablecoins',async()=>{const d=await call(()=>market.yields());return `${d.items.length} pools`}),
-t('CFTC positioning (stored)','Big-trader bets, Dollar and euro, Home',async()=>{const r=await env.DB.prepare('SELECT COUNT(*) AS n, MAX(report_date) AS d FROM cot_snapshots').first();if(!r.n)throw new Error('No rows yet. Press "Sync positioning now" on this page.');return `${r.n} rows, latest report ${r.d}`})]);
+t('CFTC positioning (stored)','Big-trader bets, Dollar and euro, Home',async()=>{const r=await env.DB.prepare('SELECT COUNT(*) AS n, MAX(report_date) AS d FROM cot_snapshots').first();if(!r.n)throw new Error('No rows yet. Press "Sync positioning now" on this page.');return `${r.n} rows, latest report ${r.d}`}),
+t('DefiLlama: search index','Search box, Chain and Protocol pages',async()=>{const I=await index();return `${I.protocols.length} protocols, ${I.chains.length} chains`})]);
 const{results}=await env.DB.prepare('SELECT job,ok,detail,at FROM sync_log ORDER BY id DESC LIMIT 5').all();
 return json({checks,syncs:results,time:new Date().toISOString()})}
