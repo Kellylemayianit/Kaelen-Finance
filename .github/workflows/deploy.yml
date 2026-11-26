@@ -1,1 +1,69 @@
-1
+name: Deploy research desk
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check JavaScript syntax
+        run: |
+          for f in $(find src public/js -name '*.js'); do
+            node --check --input-type=module < "$f" || { echo "Syntax error in $f"; exit 1; }
+          done
+
+      - name: Run backend tests
+        run: node --experimental-sqlite test/run.mjs
+
+      - name: Apply D1 migrations
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4"
+          command: d1 migrations apply research-desk-db --remote
+
+      - name: Deploy Worker and site
+        id: deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4"
+          command: deploy
+
+      - name: Set the WRITE_KEY secret
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WRITE_KEY: ${{ secrets.WRITE_KEY }}
+        run: printf '%s' "$WRITE_KEY" | npx --yes wrangler@4 secret put WRITE_KEY
+
+      - name: Smoke test
+        if: steps.deploy.outputs.deployment-url != ''
+        run: |
+          URL="${{ steps.deploy.outputs.deployment-url }}"
+          curl --fail --silent --show-error "$URL/api/health"
+          curl --fail --silent --show-error --output /dev/null "$URL/"
+
+      - name: First positioning sync (CFTC)
+        if: steps.deploy.outputs.deployment-url != ''
+        continue-on-error: true
+        run: |
+          curl --fail --silent --show-error -X POST \
+            -H "x-rd-key: ${{ secrets.WRITE_KEY }}" \
+            "${{ steps.deploy.outputs.deployment-url }}/api/cot/sync"
