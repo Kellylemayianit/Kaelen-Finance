@@ -1,4 +1,4 @@
-import {json} from '../http.js';import * as market from './market.js';
+import {json} from '../http.js';import * as market from './market.js';import {index} from './search.js';
 const call=async f=>{const r=await f();const b=await r.json();if(!r.ok)throw new Error(b.error||('HTTP '+r.status));return b};
 export async function status(req,env){
 const t=async(name,used,fn)=>{const s=Date.now();try{return{name,used,ok:true,detail:await fn(),ms:Date.now()-s}}catch(e){return{name,used,ok:false,detail:String(e.message||e).slice(0,200),ms:Date.now()-s}}};

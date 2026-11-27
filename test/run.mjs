@@ -46,4 +46,5 @@ eq('search by symbol',(await(await call('GET','/api/search?q=ldo',0,null)).json(
 const cd=await(await call('GET','/api/chain?name=solana',0,null)).json();eq('chain detail name',cd.name,'Solana');eq('chain series is 90 days',cd.series.length,90);eq('chain top protocol is Lido',cd.protocols[0].name,'Lido');eq('chain 7d change is a number',typeof cd.d7,'number');
 eq('chain unknown 404',(await call('GET','/api/chain?name=nope',0,null)).status,404);
 const pd=await(await call('GET','/api/protocol?slug=raydium',0,null)).json();eq('protocol detail',[pd.name,pd.category,pd.sym,pd.chains],['Raydium','Dexs','',['Solana']]);eq('protocol unknown 404',(await call('GET','/api/protocol?slug=zzz',0,null)).status,404);
+const st2=await(await call('GET','/api/status',0,null)).json();eq('status search index row works',st2.checks[4].ok,true);eq('status search index detail',st2.checks[4].detail,'3 protocols, 2 chains');
 console.log(fails?`${fails} FAILED`:'all passed');process.exit(fails?1:0);
